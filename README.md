@@ -77,3 +77,26 @@ To learn more about React Native, take a look at the following resources:
 - [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
 - [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
 - [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+
+# Create and setting
+npx react-native init fcPlannerApp
+npm i
+cd ios
+pod install
+# Start android
+cd ..
+npx react-native start
+a
+# Start ios
+open fcPlannerApp.xcworkspace
+(Click!) clean build folder
+(Click!) run
+cd ..
+npx react-native start
+i
+(Other Terminer!)npx react-native run-ios
+i
+# Make android apk file
+cd android
+./gradlew assembleRelease
+ -> (Create!) android/app/build/outputs/apk/release/app-release.apk
