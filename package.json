@@ -10,8 +10,10 @@
     "test": "jest"
   },
   "dependencies": {
+    "@react-native-community/geolocation": "^3.4.0",
     "react": "18.3.1",
     "react-native": "0.76.3",
+    "react-native-geolocation-service": "^5.3.1",
     "react-native-webview": "^13.12.4"
   },
   "devDependencies": {
