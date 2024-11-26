@@ -8,3 +8,9 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
+
+-keep class com.facebook.react.** { *; }
+-keep class com.facebook.react.uimanager.** { *; }
+-keep class com.facebook.react.views.webview.** { *; }
+-keep public class * extends android.webkit.WebView { *; }
+-dontwarn com.facebook.react.**
