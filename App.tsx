@@ -1,83 +1,124 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   SafeAreaView,
   StatusBar,
   StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-  PermissionsAndroid,
-  Platform,
   Alert,
+  BackHandler,
+  Platform,
+  PermissionsAndroid,
 } from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
-import {WebView} from 'react-native-webview';
+import { WebView } from 'react-native-webview';
 
-function App(): React.JSX.Element {
-  const webViewRef = useRef(null);
+const App = () => {
+    const webViewRef = useRef(null);
+    const [canGoBack, setCanGoBack] = useState(false);
 
-  const requestLocationPermission = async () => {
-    if (Platform.OS === 'android') {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-      );
-      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-        Alert.alert('위치 권한 제한', '설정에서 권한을 활성화해 주세요.');
-        return false;
-      }
-    } else if (Platform.OS === 'ios') {
-      // iOS 권한 상태 확인 및 요청
-      const status = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-      if (status === RESULTS.GRANTED) {
-        return true; // 이미 권한 허용됨
-      } else if (status === RESULTS.DENIED) {
-        // 사용자에게 다시 권한 요청
-        const requestStatus = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-        if (requestStatus === RESULTS.GRANTED) {
-          return true;
-        } else {
-          Alert.alert('위치 권한 거부됨', '위치 권한이 필요합니다.');
+    const requestLocationPermissions = async () => {
+      try {
+        const foregroundGranted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+
+        if (foregroundGranted !== PermissionsAndroid.RESULTS.GRANTED) {
           return false;
         }
-      } else {
-        Alert.alert('위치 권한 제한', '설정에서 권한을 활성화해 주세요.');
+
+        if (Platform.Version >= 29) {
+          const backgroundGranted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION
+          );
+
+          if (backgroundGranted !== PermissionsAndroid.RESULTS.GRANTED) {
+            return false;
+          }
+        }
+
+        return true;
+      } catch (err) {
+        Alert.alert('권한 요청 실패', `오류: ${err.message}`);
         return false;
       }
+    };
+
+    const getLocationAndSend = () => {
+      Geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const locationData = JSON.stringify({ latitude, longitude });
+          if (webViewRef.current) {
+              try {
+                webViewRef.current.postMessage(locationData);
+              } catch (err) {
+                console.error('WebView postMessage Error:', err);
+              }
+          } else {
+              console.warn('WebView reference is null. Cannot send location data.');
+          }
+        },
+        (error) => {
+          console.error('Geolocation Error:', error);
+          switch (error.code) {
+            case 1:
+              Alert.alert('위치 권한 없음', '위치 권한을 허용해 주세요.');
+              break;
+            case 2:
+              Alert.alert('위치 서비스 사용 불가', '현재 위치를 가져올 수 없습니다.');
+              break;
+            case 3:
+              Alert.alert('시간 초과', '위치 정보를 가져오는 데 실패했습니다.');
+              break;
+            default:
+              Alert.alert('오류 발생', '알 수 없는 오류가 발생했습니다.');
+          }
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+      );
+    };
+
+  const handleRequestLocationEvent = async () => {
+    const hasPermission = await requestLocationPermissions();
+    if (hasPermission) {
+      getLocationAndSend();
+    } else {
+      Alert.alert('권한 요청 실패', '위치 정보를 가져올 수 없습니다.');
     }
-    return true;
   };
 
-  const getLocationAndSend = () => {
-    Geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        const locationData = JSON.stringify({ latitude, longitude });
-
-        // WebView로 데이터 전송
-        if (webViewRef.current) {
-          webViewRef.current.postMessage(locationData);
-          setLocationSent(true); // 위치 정보 전송 상태 업데이트
-        }
-      },
-      (error) => {
-        console.error(error);
-        Alert.alert('위치 권한 사용 불가', '위치 서비스를 사용할 수 없습니다.');
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-    );
+  const handleBackPress = () => {
+    if (webViewRef.current && canGoBack) {
+      webViewRef.current.goBack();
+      return true;
+    } else {
+      Alert.alert(
+        '앱 종료',
+        '앱을 종료하시겠습니까?',
+        [
+          { text: '취소', style: 'cancel' },
+          { text: '종료', onPress: () => BackHandler.exitApp() },
+        ]
+      );
+      return true;
+    }
   };
 
   const handleNavigationChange = async (navState) => {
-    const targetPath = 'https://web.fcplanner.co.kr/reviewMap'; // 위치 정보를 보낼 대상 URL
+    console.log('Navigated to:', navState.url);
+    setCanGoBack(navState.canGoBack);
 
-    // 사용자가 대상 URL로 처음 도달했을 때만 위치 정보를 전송
-    if (navState.url === targetPath) {
-      const hasPermission = await requestLocationPermission();
-      if (hasPermission) {
-        getLocationAndSend();
-      }
+    const reviewMap = 'https://web.fcplanner.co.kr/reviewMap';
+    if (navState.url === reviewMap) {
+        handleRequestLocationEvent();
     }
   };
+
+  useEffect(() => {
+    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+    };
+  }, [canGoBack]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -85,41 +126,43 @@ function App(): React.JSX.Element {
       <WebView
         style={styles.webview}
         ref={webViewRef}
-        source={{
-          uri: 'https://web.fcplanner.co.kr',
-          headers: {
-            Authorization: 'Bearer token',
-            'Custom-Header': 'value',
-          },
-        }}
-        originWhitelist={['*']}
+        source={{ uri: 'https://web.fcplanner.co.kr/main' }}
         javaScriptEnabled={true}
         domStorageEnabled={true}
-        onNavigationStateChange={handleNavigationChange} // 페이지 경로 변경 감지
-        onMessage={(event) => console.log('Data from WebView:', event.nativeEvent.data)}
-        onLoadStart={syntheticEvent => {
-          const {nativeEvent} = syntheticEvent;
+        cacheEnabled={true}
+        mixedContentMode="always"
+        allowFileAccess={true}
+        onNavigationStateChange={handleNavigationChange}
+        onLoadStart={(syntheticEvent) => {
+          const { nativeEvent } = syntheticEvent;
           console.log('Loading URL:', nativeEvent.url);
         }}
-        onError={syntheticEvent => {
-          const {nativeEvent} = syntheticEvent;
-          console.warn('WebView error: ', nativeEvent);
+        onMessage={(event) => {
+          try {
+            const data = JSON.parse(event.nativeEvent.data);
+            if (data.request === 'requestLocation') {
+              handleRequestLocationEvent();
+            }
+          } catch (error) {
+            console.error('Error parsing message from WebView:', error);
+          }
+        }}
+        onError={(syntheticEvent) => {
+          const { nativeEvent } = syntheticEvent;
+          console.error('WebView Error:', nativeEvent);
+          Alert.alert('오류 발생', `페이지를 로드할 수 없습니다.\n오류 메시지: ${nativeEvent.description}`);
         }}
       />
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   webview: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    flex: 1,
   },
 });
 

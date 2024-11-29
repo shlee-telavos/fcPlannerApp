@@ -18,4 +18,16 @@ buildscript {
     }
 }
 
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    configurations.all {
+        resolutionStrategy {
+            force 'com.google.android.gms:play-services-location:21.0.1' // 모든 모듈에서 동일한 버전 사용
+        }
+    }
+}
+
 apply plugin: "com.facebook.react.rootproject"

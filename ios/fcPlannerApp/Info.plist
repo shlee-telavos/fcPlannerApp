@@ -54,8 +54,8 @@
       <true/>
   </dict>
   <key>NSLocationWhenInUseUsageDescription</key>
-  <string>We need your location to show relevant data.</string>
+  <string>위치 기반 서비스를 제공하기 위해 위치 정보가 필요합니다.</string>
   <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-  <string>We need your location to show relevant data.</string>
+  <string>위치 기반 서비스를 제공하기 위해 위치 정보가 필요합니다.</string>
 </dict>
 </plist>

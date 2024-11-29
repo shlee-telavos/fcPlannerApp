@@ -100,3 +100,22 @@ i
 cd android
 ./gradlew assembleRelease
  -> (Create!) android/app/build/outputs/apk/release/app-release.apk
+# Reset Android build cash
+cd android
+./gradlew clean
+cd ..
+# Clean and Rebuild APK
+cd android
+./gradlew clean
+./gradlew assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+cd ..
+# Restart Emulater 
+adb emu kill
+adb kill-server
+adb start-server
+# Create Metro Bundeler Forcing
+npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res/
+
+# Reset Metro Bundeler
+npx react-native start --reset-cache
