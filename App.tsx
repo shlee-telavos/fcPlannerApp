@@ -12,13 +12,13 @@ import {
 import Geolocation from 'react-native-geolocation-service';
 import { WebView } from 'react-native-webview';
 import InAppBrowser from 'react-native-inappbrowser-reborn';
-// import URLParse from 'url-parse';
+import URLParse from 'url-parse';
 
 
 const App = () => {
     const webViewRef = useRef(null);
     const [canGoBack, setCanGoBack] = useState(false);
-//     const allowedDomains = ['web.fcplanner.co.kr', 'dapi.kakao.com', 'fcpwas.ovsfc.com', 'review.fcplanner.co.kr']; // 허용된 도메인 리스트
+    const allowedDomains = ['web.fcplanner.co.kr', 'dapi.kakao.com', 'fcpwas.ovsfc.com', 'review.fcplanner.co.kr']; // 허용된 도메인 리스트
 
 
   const requestLocationPermissions = async () => {
@@ -153,7 +153,6 @@ const App = () => {
         (position) => {
           const { latitude, longitude } = position.coords;
           const locationData = JSON.stringify({ latitude, longitude });
-          Alert.alert(locationData.toString());
           if (webViewRef.current) {
               try {
                 webViewRef.current.postMessage(locationData);
@@ -212,36 +211,77 @@ const App = () => {
     }
   };
 
-//   const handleShouldStartLoadWithRequest = async (request) => {
-//     try {
-//       if (!request.url) return true;
-//
-//       const parsedUrl = new URLParse(request.url); // url-parse 사용
-//       console.log('Hostname:', parsedUrl.hostname);
-//
-//
-//       if (!allowedDomains.some(domain => parsedUrl.hostname.endsWith(domain))) {
-//         const isAvailable = await InAppBrowser.isAvailable();
-//         if (isAvailable) {
-//           await InAppBrowser.open(request.url, {
-//             dismissButtonStyle: 'close',
-//             preferredBarTintColor: '#453AA4',
-//             preferredControlTintColor: 'white',
-//             readerMode: false,
-//             animated: true,
-//           });
-//         } else {
-//           Linking.openURL(request.url);
-//         }
-//         return false; // WebView에서 로드하지 않음
-//       }
-//
-//       return true; // 허용된 도메인은 WebView에서 계속 로드
-//     } catch (error) {
-//       console.error('Error in handleShouldStartLoadWithRequest:', error.message);
-//       return true; // 오류 발생 시 기본적으로 WebView에서 로드
-//     }
-//   };
+  const handleExternalLink = async (url) => {
+    try {
+      if (await InAppBrowser.isAvailable()) {
+        await InAppBrowser.open(url, {
+          // Customize the browser's appearance
+          dismissButtonStyle: 'cancel',
+          preferredBarTintColor: '#453AA4',
+          preferredControlTintColor: 'white',
+          readerMode: false,
+          showTitle: true,
+          enableDefaultShare: true,
+          enableBarCollapsing: true,
+        });
+      } else {
+        Linking.openURL(url); // Fallback to default browser
+      }
+    } catch (error) {
+      console.error('Error opening in-app browser:', error);
+    }
+  };
+
+
+    const extractHostname = (url) => {
+      try {
+        // URL이 http 또는 https로 시작하지 않으면 기본 도메인 추가
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          const baseDomain = 'https://web.fcplanner.co.kr';
+          url = new URLParse(url, baseDomain).href;
+        }
+
+        const parsedUrl = new URLParse(url);
+        return parsedUrl.hostname; // 도메인 반환
+      } catch (error) {
+        console.error('extractHostname Error:', error);
+        return '';
+      }
+    };
+
+  const onShouldStartLoadWithRequest = (request) => {
+    const { url } = request;
+    const hostname = extractHostname(url);
+    const isAllowedDomain = allowedDomains.includes(hostname);
+
+    if (!isAllowedDomain) {
+      // 외부 링크는 In-App Browser로 열기
+      handleExternalLink(url);
+      return false; // WebView에서 URL 로드를 중단
+    }
+
+    return true; // WebView에서 허용된 URL 로드
+  };
+
+  // WebView에 JavaScript 주입
+  // 모든 링크의 target="_blank"를 제거하고 React Native에서 처리하도록 변경
+  // window.open 호출을 가로채서 React Native로 URL 전달
+  const injectedJavaScript = `
+    (function() {
+        const originalWindowOpen = window.open;
+        window.open = function(url, target, features) {
+            if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'windowOpen', url }));
+            } else {
+                return originalWindowOpen(url, target, features);
+            }
+        };
+        const links = document.querySelectorAll('a[target="_blank"]');
+        links.forEach(link => {
+            link.target = '_self'; // WebView에서 처리 가능하도록 변경
+        });
+    })();
+  `;
 
   const handleBackPress = () => {
     if (webViewRef.current && canGoBack) {
@@ -279,8 +319,9 @@ const App = () => {
         cacheEnabled={true}
         mixedContentMode="always"
         allowFileAccess={true}
-//         onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
         onNavigationStateChange={handleNavigationChange}
+        onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
+        injectedJavaScript={injectedJavaScript} // JavaScript 주입
         onLoadStart={(syntheticEvent) => {
           const { nativeEvent } = syntheticEvent;
           console.log('Loading URL:', nativeEvent.url);
@@ -290,6 +331,25 @@ const App = () => {
           try {
             const data = JSON.parse(event.nativeEvent.data);
             console.log('event data:',data);
+
+            if (data.type === 'windowOpen') {
+              // window.open 호출 시 전달된 URL 처리
+              const { url } = data;
+              const hostname = extractHostname(url);
+              const isAllowedDomain = allowedDomains.includes(hostname);
+
+              if (isAllowedDomain) {
+                // 허용된 도메인은 WebView로 열기
+                if (webViewRef.current) {
+                  webViewRef.current.injectJavaScript(`
+                    window.location.href = "${url}";
+                  `);
+                }
+              } else {
+                // 허용되지 않은 도메인은 InAppBrowser로 열기
+                handleExternalLink(url);
+              }
+            }
 
             if (data.request === 'requestLocation') {
               handleRequestLocationEvent();

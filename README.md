@@ -88,22 +88,24 @@ cd ..
 npx react-native start
 a
 # Start ios
+cd ios
 open fcPlannerApp.xcworkspace
 (Click!) clean build folder
 (Click!) run
 cd ..
+npx react-native run-ios
+i
 npx react-native start
 i
-(Other Terminer!)npx react-native run-ios
-i
-# Make android apk file
-cd android
-./gradlew assembleRelease
- -> (Create!) android/app/build/outputs/apk/release/app-release.apk
 # Reset Android build cash
 cd android
 ./gradlew clean
 cd ..
+# Make android apk file
+cd android
+./gradlew assembleRelease
+cd ..
+-> (Create!) android/app/build/outputs/apk/release/app-release.apk
 # Clean and Rebuild APK
 cd android
 ./gradlew clean
