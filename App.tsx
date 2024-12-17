@@ -363,6 +363,7 @@ const App = () => {
         cacheEnabled={true}
         mixedContentMode="always"
         allowFileAccess={true}
+        allowUniversalAccessFromFileURLs={true} // 파일 간 액세스 허용
         onNavigationStateChange={(navState) => setCanGoBack(navState.canGoBack)}
         onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
         injectedJavaScript={injectedJavaScript} // JavaScript 주입
