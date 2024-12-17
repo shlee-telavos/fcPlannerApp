@@ -69,7 +69,10 @@ const App = () => {
           const authStatus = await Geolocation.requestAuthorization('whenInUse');
 
           if (authStatus === 'granted' || authStatus === 'whenInUse') {
+            console.log('Location permission granted');
             return true; // 위치 정보 가져올 수 있음
+          } else {
+               console.warn('Location permission denied:', authStatus);
           }
 
           if (authStatus === 'denied') {
@@ -155,6 +158,7 @@ const App = () => {
           const locationData = JSON.stringify({ latitude, longitude });
           if (webViewRef.current) {
               try {
+              console.log('postMessage send data:',locationData);
                 webViewRef.current.postMessage(locationData);
               } catch (err) {
                 console.error('WebView postMessage Error:', err);
@@ -191,6 +195,7 @@ const App = () => {
     } else {
       if (webViewRef.current) {
           try {
+              console.log('postMessage send data: latitude:0, longitude:0');
               webViewRef.current.postMessage(JSON.stringify({'latitude':0, 'longitude':0}));
           } catch (err) {
               console.error('WebView postMessage Error:', err);
@@ -202,20 +207,17 @@ const App = () => {
     }
   };
 
-  const handleNavigationChange = async (navState) => {
-    console.log('Navigated to:', navState.url);
-    setCanGoBack(navState.canGoBack);
-
-    if (navState.url.includes('/reviewMap')) {
-        handleRequestLocationEvent();
-    }
-  };
-
   const handleExternalLink = async (url) => {
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        console.error('Invalid URL format:', url);
+        Alert.alert('오류', '올바르지 않은 URL입니다.');
+        return;
+    }
+
     try {
-      if (await InAppBrowser.isAvailable()) {
+      const isBrowserAvailable = await InAppBrowser.isAvailable();
+      if (isBrowserAvailable) {
         await InAppBrowser.open(url, {
-          // Customize the browser's appearance
           dismissButtonStyle: 'cancel',
           preferredBarTintColor: '#453AA4',
           preferredControlTintColor: 'white',
@@ -229,9 +231,9 @@ const App = () => {
       }
     } catch (error) {
       console.error('Error opening in-app browser:', error);
+      Linking.openURL(url); // Fallback to default browser
     }
   };
-
 
     const extractHostname = (url) => {
       try {
@@ -251,9 +253,9 @@ const App = () => {
 
   const onShouldStartLoadWithRequest = (request) => {
     const { url } = request;
+    console.log('Requested URL:', url); // API 호출된 URL 확인
     const hostname = extractHostname(url);
     const isAllowedDomain = allowedDomains.includes(hostname);
-
     if (!isAllowedDomain) {
       // 외부 링크는 In-App Browser로 열기
       handleExternalLink(url);
@@ -268,6 +270,7 @@ const App = () => {
   // window.open 호출을 가로채서 React Native로 URL 전달
   const injectedJavaScript = `
     (function() {
+        // window.open 가로채기
         const originalWindowOpen = window.open;
         window.open = function(url, target, features) {
             if (window.ReactNativeWebView) {
@@ -276,10 +279,51 @@ const App = () => {
                 return originalWindowOpen(url, target, features);
             }
         };
-        const links = document.querySelectorAll('a[target="_blank"]');
-        links.forEach(link => {
+
+        // 기존 DOM에 있는 <a target="_blank"> 처리
+        const updateLinks = () => {
+          const links = document.querySelectorAll('a[target="_blank"]');
+          links.forEach(link => {
             link.target = '_self'; // WebView에서 처리 가능하도록 변경
+            link.addEventListener('click', (e) => {
+              e.preventDefault();
+              if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'windowOpen', url: link.href }));
+              }
+            });
+          });
+        };
+
+        // DOM 변경 감지
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach(() => {
+            updateLinks(); // 새로 추가된 링크에 대해 처리
+          });
         });
+
+        // 감지 대상 설정
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        // 초기 실행
+        updateLinks();
+
+        // iOS 환경 확인 후 $.ajax 가로채기
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            console.log('iOS detected. Overriding $.ajax.');
+
+            const originalAjax = $.ajax;
+            $.ajax = function(options) {
+                if (options.url && !options.url.startsWith('http')) {
+                    // 상대 경로를 절대 경로로 변환
+                    const baseUrl = window.location.origin; // 현재 사이트의 도메인
+                    options.url = baseUrl + options.url;
+                    console.log('Modified URL:', options.url); // 디버깅 용도
+                }
+
+                // 원래의 ajax 메서드를 호출
+                return originalAjax.call(this, options);
+            };
+        }
     })();
   `;
 
@@ -319,7 +363,7 @@ const App = () => {
         cacheEnabled={true}
         mixedContentMode="always"
         allowFileAccess={true}
-        onNavigationStateChange={handleNavigationChange}
+        onNavigationStateChange={(navState) => setCanGoBack(navState.canGoBack)}
         onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
         injectedJavaScript={injectedJavaScript} // JavaScript 주입
         onLoadStart={(syntheticEvent) => {
