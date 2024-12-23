@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import {
   SafeAreaView,
-  StatusBar,
   StyleSheet,
   Alert,
   BackHandler,
@@ -13,6 +12,8 @@ import Geolocation from 'react-native-geolocation-service';
 import { WebView } from 'react-native-webview';
 import InAppBrowser from 'react-native-inappbrowser-reborn';
 import URLParse from 'url-parse';
+import DeviceInfo from 'react-native-device-info';
+
 
 
 const App = () => {
@@ -20,6 +21,19 @@ const App = () => {
     const [canGoBack, setCanGoBack] = useState(false);
     const allowedDomains = ['web.fcplanner.co.kr', 'dapi.kakao.com', 'fcpwas.ovsfc.com', 'review.fcplanner.co.kr']; // 허용된 도메인 리스트
 
+    const getUniqueAppIdAndSend = async () => {
+      const uniqueId = await DeviceInfo.getUniqueId(); // 디바이스 고유 ID
+      console.log('Unique App ID:', uniqueId);
+      if (webViewRef.current) {
+          try {
+              console.log('postMessage send data: uniqueId:', uniqueId);
+              webViewRef.current.postMessage(JSON.stringify({'uniqueId': uniqueId}));
+          } catch (err) {
+              console.error('WebView postMessage Error:', err);
+              Alert.alert('오류', 'WebView 참조를 찾을 수 없습니다. 앱을 다시 시작해 주세요.');
+          }
+      }
+    };
 
   const requestLocationPermissions = async () => {
       try {
@@ -30,11 +44,11 @@ const App = () => {
           );
 
           // Android 10 이상에서 ACCESS_BACKGROUND_LOCATION 권한 확인
-          const isBackgroundLocationGranted =
-            Platform.Version >= 29 &&
-            (await PermissionsAndroid.check(
-              PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION
-            ));
+//           const isBackgroundLocationGranted =
+//             Platform.Version >= 29 &&
+//             (await PermissionsAndroid.check(
+//               PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION
+//             ));
 
           // "앱 사용 중에만 허용" 상태 처리
           if (isFineLocationGranted) {
@@ -129,16 +143,14 @@ const App = () => {
         const isFineLocationGranted = await PermissionsAndroid.check(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
         );
-        const isBackgroundLocationGranted =
-          Platform.Version >= 29 &&
-          (await PermissionsAndroid.check(
-            PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION
-          ));
+//         const isBackgroundLocationGranted =
+//           Platform.Version >= 29 &&
+//           (await PermissionsAndroid.check(
+//             PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION
+//           ));
 
-        if (
-          isFineLocationGranted &&
-          (Platform.Version < 29 || isBackgroundLocationGranted)
-        ) {
+//         if (isFineLocationGranted && (Platform.Version < 29 || isBackgroundLocationGranted)) {
+        if (isFineLocationGranted) {
           clearInterval(interval);
           resolve(true);
         }
@@ -375,6 +387,7 @@ const App = () => {
             console.log('onMessage event 발생');
           try {
             const data = JSON.parse(event.nativeEvent.data);
+            console.log('event data.type:',data.type);
             console.log('event data:',data);
 
             if (data.type === 'windowOpen') {
@@ -398,6 +411,10 @@ const App = () => {
 
             if (data.request === 'requestLocation') {
               handleRequestLocationEvent();
+            }
+
+            if (data.request === 'requestAppId') {
+              getUniqueAppIdAndSend();
             }
           } catch (error) {
               console.error('WebView 메시지 파싱 에러:', error);

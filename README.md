@@ -100,12 +100,13 @@ i
 cd android
 ./gradlew clean
 cd ..
-# Make android apk file
+# Make android apk file and aab file
 cd android
 ./gradlew clean
 ./gradlew assembleRelease
 cd ..
 -> (Create!) android/app/build/outputs/apk/release/app-release.apk
+-> (Create!) android/app/build/outputs/bundle/release/app-release.aab
 # Clean and Rebuild APK
 cd android
 ./gradlew clean
@@ -118,6 +119,9 @@ adb kill-server
 adb start-server
 # Create Metro Bundeler Forcing
 npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res/
-
 # Reset Metro Bundeler
 npx react-native start --reset-cache
+# Create KeyStore
+keytool -genkeypair -v -keystore fcPlanner-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias fcPlanner-key-alias
+# Get KeyStore info
+keytool -list -v -keystore /Users/isohwi/Desktop/development/study/react-native/fcPlannerApp/android/app/fcPlanner-release-key.jks

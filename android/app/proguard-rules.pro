@@ -9,8 +9,26 @@
 
 # Add any project specific keep options here:
 
+# React Native 기본 규칙
 -keep class com.facebook.react.** { *; }
--keep class com.facebook.react.uimanager.** { *; }
--keep class com.facebook.react.views.webview.** { *; }
--keep public class * extends android.webkit.WebView { *; }
 -dontwarn com.facebook.react.**
+
+# react-native-geolocation-service
+-keep class com.reactnativecommunity.geolocation.** { *; }
+-dontwarn com.reactnativecommunity.geolocation.**
+
+# react-native-webview
+-keep class com.reactnativecommunity.webview.** { *; }
+-keep public class * extends android.webkit.WebView { *; }
+-dontwarn com.reactnativecommunity.webview.**
+
+# react-native-inappbrowser-reborn
+-keep class com.proyecto26.inappbrowser.** { *; }
+-dontwarn com.proyecto26.inappbrowser.**
+
+# react-native-device-info
+-keep class com.learnium.RNDeviceInfo.** { *; }
+-dontwarn com.learnium.RNDeviceInfo.**
+-keepclassmembers class * {
+    @com.facebook.react.bridge.ReactMethod <methods>;
+}
