@@ -365,7 +365,6 @@ const App = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar />
       <WebView
         style={styles.webview}
         ref={webViewRef}
