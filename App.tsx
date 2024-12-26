@@ -19,7 +19,7 @@ import DeviceInfo from 'react-native-device-info';
 const App = () => {
     const webViewRef = useRef(null);
     const [canGoBack, setCanGoBack] = useState(false);
-    const allowedDomains = ['web.fcplanner.co.kr', 'dapi.kakao.com', 'fcpwas.ovsfc.com', 'review.fcplanner.co.kr']; // 허용된 도메인 리스트
+    const allowedDomains = ['web.fcplanner.co.kr', 'dapi.kakao.com', 'fcpwas.ovsfc.com', 'review.fcplanner.co.kr', 'fcpweb.ovsfc.com']; // 허용된 도메인 리스트
 
     const getUniqueAppIdAndSend = async () => {
       const uniqueId = await DeviceInfo.getUniqueId(); // 디바이스 고유 ID

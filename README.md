@@ -100,12 +100,17 @@ i
 cd android
 ./gradlew clean
 cd ..
-# Make android apk file and aab file
+# Make android apk file
 cd android
 ./gradlew clean
 ./gradlew assembleRelease
 cd ..
 -> (Create!) android/app/build/outputs/apk/release/app-release.apk
+# Make android aab file
+cd android
+./gradlew clean
+./gradlew bundleRelease
+cd ..
 -> (Create!) android/app/build/outputs/bundle/release/app-release.aab
 # Clean and Rebuild APK
 cd android
