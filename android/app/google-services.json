@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "487717856499",
+    "project_id": "franchiseplanner",
+    "storage_bucket": "franchiseplanner.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:487717856499:android:597ea50850db52060f0386",
+        "android_client_info": {
+          "package_name": "com.franchiseplanner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAeCaq73Ihi42BQRpn_pvadaYqM0lHVYmI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,6 +1,7 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+apply plugin: 'com.google.gms.google-services'  // Firebase 플러그인 적용
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -128,6 +129,16 @@ dependencies {
 
     // Google Play Services 위치 라이브러리
     implementation 'com.google.android.gms:play-services-location:21.0.1'
+
+    // Import the Firebase BoM
+    implementation platform('com.google.firebase:firebase-bom:33.9.0')
+
+    // TODO: Add the dependencies for Firebase products you want to use
+    // When using the BoM, don't specify versions in Firebase dependencies
+    implementation 'com.google.firebase:firebase-analytics'
+
+    // Firebase Cloud Messaging (FCM)
+    implementation 'com.google.firebase:firebase-messaging'
 
     // Hermes 또는 JSC 엔진 설정
     if (hermesEnabled.toBoolean()) {

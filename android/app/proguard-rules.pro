@@ -32,3 +32,8 @@
 -keepclassmembers class * {
     @com.facebook.react.bridge.ReactMethod <methods>;
 }
+
+-dontwarn androidx.**
+-keep class androidx.** { *; }
+-keep class com.google.** { *; }
+-keep class com.facebook.** { *; }
