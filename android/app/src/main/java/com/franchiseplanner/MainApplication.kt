@@ -1,4 +1,4 @@
-package com.fcplannerapp
+package com.franchiseplanner
 
 import android.app.Application
 import com.facebook.react.PackageList

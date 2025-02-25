@@ -1,4 +1,4 @@
-package com.fcplannerapp
+package com.franchiseplanner
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

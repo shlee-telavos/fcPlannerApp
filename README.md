@@ -127,6 +127,9 @@ npx react-native bundle --platform android --dev false --entry-file index.js --b
 # Reset Metro Bundeler
 npx react-native start --reset-cache
 # Create KeyStore
+(구버전)
 keytool -genkeypair -v -keystore fcPlanner-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias fcPlanner-key-alias
+다음에 대해 유효 기간이 10,000일인 2,048비트 RSA 키 쌍 및 자체 서명된 인증서(SHA256withRSA)를 생성하는 중
+: CN=sohwi lee, OU=개발팀, O=제2의문, L=관악구, ST=서울, C=82
 # Get KeyStore info
 keytool -list -v -keystore /Users/isohwi/Desktop/development/study/react-native/fcPlannerApp/android/app/fcPlanner-release-key.jks

@@ -7,6 +7,7 @@ import {
   Platform,
   PermissionsAndroid,
   Linking,
+  Share,
 } from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 import { WebView } from 'react-native-webview';
@@ -33,6 +34,17 @@ const App = () => {
               Alert.alert('오류', 'WebView 참조를 찾을 수 없습니다. 앱을 다시 시작해 주세요.');
           }
       }
+    };
+
+    // 공유 기능
+    const shareContent = async (url) => {
+        try {
+            await Share.share({
+                message: `나의 성향 분석 - 나에게 꼭 맞는 프랜차이즈 찾아보기.\n${url}`,
+            });
+        } catch (error) {
+            console.error('Error sharing content: ', error);
+        }
     };
 
   const requestLocationPermissions = async () => {
@@ -414,6 +426,10 @@ const App = () => {
 
             if (data.request === 'requestAppId') {
               getUniqueAppIdAndSend();
+            }
+
+            if (data.request === 'shareContentUrl') {
+              shareContent(data.url);
             }
           } catch (error) {
               console.error('WebView 메시지 파싱 에러:', error);
