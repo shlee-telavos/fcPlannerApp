@@ -3,4 +3,7 @@
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">web.fcplanner.co.kr</domain>
     </domain-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">admin.fcplanner.co.kr</domain>
+    </domain-config>
 </network-security-config>

@@ -19,12 +19,17 @@ use_modular_headers!
 
 target 'fcPlannerApp' do
   config = use_native_modules!
-
+  
+  use_frameworks! :linkage => :static
+  
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
+  
+  # 👇 Firebase를 Static Framework로 사용하도록 설정
+  $RNFirebaseAsStaticFramework = true
 
   target 'fcPlannerAppTests' do
     inherit! :complete
