@@ -1646,7 +1646,7 @@ PODS:
     - RNFBApp
   - RNInAppBrowser (3.7.0):
     - React-Core
-  - RNPermissions (5.2.6):
+  - RNPermissions (5.3.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1988,7 +1988,7 @@ SPEC CHECKSUMS:
   RNFBApp: 526e8bbb0d358b95c3068bc4c26ceb43a34f467d
   RNFBMessaging: fde05e1048b26d59de854920f10e5632260491d9
   RNInAppBrowser: e36d6935517101ccba0e875bac8ad7b0cb655364
-  RNPermissions: bd73dcb905096b255defb9d3bd77f0ebcf5a4e08
+  RNPermissions: b0cf10f03083807b5e42f4e6514ace6d0a555fdc
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 748f06daed00132bf0a051dbb2f4347660ac1a98
 

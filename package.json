@@ -21,7 +21,6 @@
     "react-native-device-info": "^14.0.1",
     "react-native-geolocation-service": "^5.3.1",
     "react-native-inappbrowser-reborn": "^3.7.0",
-    "react-native-permissions": "^5.2.0",
     "react-native-webview": "^13.12.5",
     "url-parse": "^1.5.10"
   },
