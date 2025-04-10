@@ -6,4 +6,7 @@
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">admin.fcplanner.co.kr</domain>
     </domain-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">fcpweb.ovsfc.com</domain>
+    </domain-config>
 </network-security-config>
